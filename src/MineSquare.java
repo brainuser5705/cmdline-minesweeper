@@ -59,7 +59,7 @@ public class MineSquare implements Square{
      * (changes display back to blank)
      */
     public void unflag(){
-        if(flag && !reveal){
+        if(flag){
             flag = false;
             display = " ";
         }
@@ -99,6 +99,9 @@ public class MineSquare implements Square{
         this.row = row;
     }
 
+    public boolean isFlagged(){
+        return flag;
+    }
     /**
      * Returns in-game display of square
      * @return string of mine's display state

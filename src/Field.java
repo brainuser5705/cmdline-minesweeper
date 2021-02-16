@@ -4,12 +4,14 @@ public class Field {
     int numRows;
     int numCols;
     Square[][] field;
+    MineSquare[] mineCoords;
 
     public Field(int mines, int rows, int cols){
         numMines = mines;
         numRows = rows;
         numCols = cols;
         field = new Square[rows][cols];
+        mineCoords = new MineSquare[mines]; // coordinates of mines
     }
 
     // can either make an empty Square field and cast in generateField()
@@ -22,6 +24,7 @@ public class Field {
             int c = (int) (Math.random() * numCols);
             if (!(field[r][c] instanceof MineSquare)) {
                 field[r][c] = new MineSquare(r, c);
+                mineCoords[count] = (MineSquare) getSquare(r,c); // reference issue?
                 count++;
             }
         }
@@ -79,5 +82,7 @@ public class Field {
     public Square getSquare(int row, int col){
         return field[row][col];
     }
+
+    public MineSquare[] getMineCoords(){ return mineCoords; }
 
 }

@@ -42,11 +42,10 @@ public class NumSquare implements Square{
     }
 
     public void flag(){
-        if (!flag && num != 0 && !reveal){ // reveal and not 0
+        if (!flag && !reveal) { // reveal and not 0
             flag = true;
-            display = "\033[4mF\033[m"; // figure out how to put multiple colors
+            display = "\033[35mF\033[m"; // figure out how to put multiple colors
         }
-
     }
 
     public int getValue(){
@@ -54,7 +53,7 @@ public class NumSquare implements Square{
     }
 
     public void unflag(){
-        if (flag && num != 0 && !reveal){
+        if (flag){
             flag = false;
             display = " ";
         }
@@ -85,7 +84,7 @@ public class NumSquare implements Square{
     }
 
     public String toString(){
-        return "[" + "\033[" + COLORS.get(num) + "m" + display + "\033[0m" + "]";
+        return "[" + display + "]";
     }
 
     // boolean return so it knows when to print error message, or learn how to use assert or some other thing

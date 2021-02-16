@@ -8,6 +8,7 @@ public class Minesweeper {
     int numMines;
     boolean isGameOver;
     boolean isWinner;
+    int flagsLeft;
 
     public Minesweeper(int numMines, int numRows, int numCols){
         game = new Field(numMines, numRows, numCols);
@@ -15,6 +16,7 @@ public class Minesweeper {
         this.numMines = numMines;
         isGameOver = false;
         isWinner = true;
+        flagsLeft = numMines;
     }
 
     public void playMinesweeper(){
@@ -46,6 +48,10 @@ public class Minesweeper {
                     }
                     default -> System.out.println("This command is not supported yet.");
                 }
+                if (!isGameOver) {
+                    isGameOver = isGameOver();
+                }
+                System.out.println("Flags left: " + flagsLeft);
             }else {
                 System.out.println("Invalid command.");
             }
@@ -68,15 +74,17 @@ public class Minesweeper {
         for (int i = 1; i < args.length; i++){
             String[] coords = args[i].split(",");
             Square s = game.getSquare(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
-            if (s.isMine()){
+            if (s.isMine()){ // not working
+                System.out.println(s.isMine());
                 isWinner = false;
                 isGameOver = true;
+                break;
+            }else {
+                s.reveal();
+                ArrayList<Square> revealedSquares = new ArrayList<Square>();
+                revealedSquares.add(s); // see if i can directly initialize
+                revealSurroundingBlanks(s, revealedSquares);
             }
-            s.reveal();
-            ArrayList<Square> revealedSquares = new ArrayList<Square>();
-            revealedSquares.add(s); // see if i can directly initialize
-            revealSurroundingBlanks(s, revealedSquares);
-
         }
     }
 
@@ -85,6 +93,7 @@ public class Minesweeper {
             String[] coords = args[i].split(",");
             Square s = game.getSquare(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
             s.flag();
+            flagsLeft--;
         }
     }
 
@@ -93,6 +102,7 @@ public class Minesweeper {
             String[] coords = args[i].split(",");
             Square s = game.getSquare(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
             s.unflag();
+            flagsLeft++;
         }
     }
 
@@ -105,7 +115,7 @@ public class Minesweeper {
                 Square adjacentSquare = game.getSquare(s.getRow()+pair[0], s.getCol()+pair[1]);
                 if (!revealedSquares.contains(adjacentSquare) && adjacentSquare.getValue() == 0){ // is already revealed, then skip - add this function
                     adjacentSquare.reveal();
-                    revealAdjacentSquares(s);
+                    revealAdjacentSquares(s); //to show numbers
                     revealedSquares.add(adjacentSquare);
                     revealSurroundingBlanks(adjacentSquare, revealedSquares);
                 }
@@ -130,6 +140,22 @@ public class Minesweeper {
         }
     }
 
+    private boolean areAllMinesFlagged(){
+        MineSquare[] mineCoords = game.getMineCoords();
+        for (MineSquare mine : mineCoords){
+            if (!mine.isFlagged()) {
+                //System.out.println("Row: " + mine.getRow() + ", Col: " + mine.getCol());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isGameOver(){
+        return flagsLeft == 0 && areAllMinesFlagged();
+        // if all flags are used and all mines are flagged
+    }
+
     public static void main(String[] args){
         Minesweeper game = new Minesweeper(10, 9, 9);
         System.out.println("\033[36mCommand-line Minesweeper\033[0m");
@@ -145,4 +171,6 @@ public class Minesweeper {
     //display coordinates for easy gameplay
     //add color - colors don't work, need to find another way
     //multi command input
+    //change from interface to abstract classes
+    //add row and col numbers
 }
