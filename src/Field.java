@@ -1,17 +1,17 @@
 public class Field {
 
-    int numMines;
-    int numRows;
-    int numCols;
-    Square[][] field;
-    MineSquare[] mineCoords;
+    private final int numMines;
+    private final int numRows;
+    private final int numCols;
+    private final Block[][] field;
+    private final MineBlock[] mineCoords;
 
     public Field(int mines, int rows, int cols){
         numMines = mines;
         numRows = rows;
         numCols = cols;
-        field = new Square[rows][cols];
-        mineCoords = new MineSquare[mines]; // coordinates of mines
+        field = new Block[rows][cols];
+        mineCoords = new MineBlock[mines]; // coordinates of mines
     }
 
     // can either make an empty Square field and cast in generateField()
@@ -22,9 +22,9 @@ public class Field {
         while(count != numMines){
             int r = (int) (Math.random() * numRows);
             int c = (int) (Math.random() * numCols);
-            if (!(field[r][c] instanceof MineSquare)) {
-                field[r][c] = new MineSquare(r, c);
-                mineCoords[count] = (MineSquare) getSquare(r,c); // reference issue?
+            if (!(field[r][c] instanceof MineBlock)) { // not already a mine
+                field[r][c] = new MineBlock(r, c);
+                mineCoords[count] = (MineBlock) getBlock(r,c); // reference issue?
                 count++;
             }
         }
@@ -33,9 +33,9 @@ public class Field {
     private void generateNumbers(){
         for (int r = 0; r < numRows; r++){
             for (int c = 0; c < numCols; c++){
-                if (!(field[r][c] instanceof MineSquare)) {
+                if (!(field[r][c] instanceof MineBlock)) {
                     int countMines = countSurroundingMines(r, c);
-                    field[r][c] = new NumSquare(countMines, r, c);
+                    field[r][c] = new NumBlock(countMines, r, c);
                 }
             }
         }
@@ -62,8 +62,8 @@ public class Field {
     }
 
     public void printField(){
-        for (Square[] r : field){
-            for (Square s : r){
+        for (Block[] r : field){
+            for (Block s : r){
                 System.out.print(s);
             }
             System.out.print("\n");
@@ -71,18 +71,30 @@ public class Field {
     }
 
     public void revealField(){
-        for (Square[] r : field){
-            for (Square s : r){
-                System.out.print(s.trueReveal());
+        for (Block[] r : field){
+            for (Block s : r){
+                System.out.print(s.forceReveal());
             }
             System.out.print("\n");
         }
     }
 
-    public Square getSquare(int row, int col){
+    public Block getBlock(int row, int col){
         return field[row][col];
     }
 
-    public MineSquare[] getMineCoords(){ return mineCoords; }
+    public MineBlock[] getMineCoords(){ return mineCoords; }
+
+    public Block[][] getField(){
+        return field;
+    }
+
+    public int getNumRows(){
+        return numRows;
+    }
+
+    public int getNumCols(){
+        return numCols;
+    }
 
 }
