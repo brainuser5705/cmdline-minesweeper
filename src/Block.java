@@ -58,6 +58,12 @@ public abstract class Block {
         return "[" + content + "]";
     }
 
+    public void forceUnreveal() {
+        isFlag = false;
+        isReveal = false;
+        display = " ";
+    };
+
     public String toString(){ // display
         return "[" + display + "]";
     }

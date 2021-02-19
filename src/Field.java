@@ -12,6 +12,8 @@ public class Field {
         numCols = cols;
         field = new Block[rows][cols];
         mineCoords = new MineBlock[mines]; // coordinates of mines
+
+        generateField();
     }
 
     // can either make an empty Square field and cast in generateField()
@@ -96,5 +98,7 @@ public class Field {
     public int getNumCols(){
         return numCols;
     }
+
+    public int getNumMines() { return numMines; }
 
 }
