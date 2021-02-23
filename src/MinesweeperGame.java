@@ -111,11 +111,18 @@ public class MinesweeperGame {
     }
 
     private void flagPositions(String[] args){
-        for (int i = 1; i < args.length; i++){
-            String[] coords = args[i].split(",");
-            Block s = field.getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
-            s.flag();
-            flagsLeft--;
+        if (flagsLeft <= 0){
+            System.out.println("All flags are used.");
+        }else{
+            for (int i = 1; i < args.length; i++) {
+                String[] coords = args[i].split(",");
+                Block s = field.getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
+                s.flag();
+                if (flagsLeft > 0 && !s.isReveal()) // not already revealed
+                    flagsLeft--;
+                else
+                    break;
+            }
         }
     }
 
@@ -164,7 +171,7 @@ public class MinesweeperGame {
     private boolean areAllMinesFlagged(){
         MineBlock[] mineCoords = field.getMineCoords();
         for (MineBlock mine : mineCoords){
-            if (mine.isFlag()) {
+            if (!mine.isFlag()) {
                 return false;
             }
         }
@@ -211,12 +218,12 @@ public class MinesweeperGame {
             for (Block block : row){
                 if (block.isMine()) {
                     block.flag();
-                    flagsLeft--;
                 } else {
                     block.reveal();
                 }
             }
         }
+        flagsLeft = 0;
     }
 
     private void resetGame(){
