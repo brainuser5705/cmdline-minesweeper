@@ -15,7 +15,17 @@ public class MinesweeperTest {
             case 1 -> game = new MinesweeperGame(Level.BEGINNER);
             case 2 -> game = new MinesweeperGame(Level.INTERMEDIATE);
             case 3 -> game = new MinesweeperGame(Level.EXPERT);
-            case 4 -> game = new MinesweeperGame(s.nextInt(), s.nextInt(), s.nextInt());
+            case 4 -> {
+                int numMines = s.nextInt();
+                int numRows = s.nextInt();
+                int numCols = s.nextInt();
+                if (numMines < numRows * numCols)
+                    game = new MinesweeperGame(numMines, numRows, numCols);
+                else{
+                    System.err.println("Invalid field.");
+                    System.exit(0);
+                }
+            }
             default -> System.out.println("Invalid input. Try again.");
         }
 
