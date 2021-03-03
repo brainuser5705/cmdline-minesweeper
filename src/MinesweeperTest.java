@@ -1,3 +1,5 @@
+import build.Level;
+
 import java.util.Scanner;
 
 public class MinesweeperTest {
