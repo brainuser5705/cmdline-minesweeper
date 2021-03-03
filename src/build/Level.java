@@ -1,3 +1,5 @@
+package build;
+
 public enum Level {
 
     BEGINNER (10, 8, 8),
@@ -6,10 +8,14 @@ public enum Level {
 
     private final Field game;
     private final int numMines;
+    private final int numRows;
+    private final int numCols;
 
     Level(int mines, int rows, int cols){
         game = new Field(mines, rows, cols);
         numMines = mines;
+        numRows = rows;
+        numCols = cols;
     }
 
     public Field getGame(){
@@ -19,4 +25,8 @@ public enum Level {
     public int getNumMines(){
         return numMines;
     }
+
+    public int getNumRows() { return numRows; }
+
+    public int getNumCols() { return numCols; }
 }

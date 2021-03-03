@@ -1,3 +1,5 @@
+package build;
+
 public abstract class Block {
 
     private String display;
@@ -62,7 +64,7 @@ public abstract class Block {
         isFlag = false;
         isReveal = false;
         display = " ";
-    };
+    }
 
     public String toString(){ // display
         return "[" + display + "]";

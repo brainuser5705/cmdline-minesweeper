@@ -1,3 +1,5 @@
+package build;
+
 public class NumBlock extends Block {
 
     public NumBlock(int value, int row, int col){

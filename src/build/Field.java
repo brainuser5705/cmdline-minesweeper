@@ -1,3 +1,5 @@
+package build;
+
 public class Field {
 
     private final int numMines;
@@ -43,6 +45,7 @@ public class Field {
         }
     }
 
+    // util method for generateNumbers
     private int countSurroundingMines(int r, int c) {
         int count = 0;
         int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
@@ -58,18 +61,30 @@ public class Field {
         return count;
     }
 
-    public void generateField(){
+    private void generateField(){
         placeMines();
         generateNumbers();
     }
 
     public void printField(){
+
+        System.out.print(getSpaces(0, false) + " "); // space before columns start
+        for (int col = 0; col < numCols; col++){
+            System.out.print(getSpaces(col,true) + col);
+        }
+        System.out.println();
+
+        // prints the row number and field
+        int row = 0;
         for (Block[] r : field){
+            System.out.print(getSpaces(row, false) + row);
+            row++;
             for (Block s : r){
                 System.out.print(s);
             }
             System.out.print("\n");
         }
+
     }
 
     public void revealField(){
@@ -100,5 +115,38 @@ public class Field {
     }
 
     public int getNumMines() { return numMines; }
+
+    private String getSpaces(int num, boolean isCol){ // if isCol, it counts the space needed for column
+        assert numRows > num;
+        int numDigits = 0;
+        int maxDigits = 0;
+
+        if (num == 0){ // based on the algorithm, zero is a special case
+            numDigits = 1;
+        }else{
+            while (num > 0){
+                num /= 10;
+                numDigits++;
+            }
+        }
+
+        if (isCol){
+            maxDigits = 3; // max 3 spaces for columns (for now), might need to code some dynamic spacing
+        }else{
+            int rows = numRows;
+            while (rows > 0){
+                rows /= 10;
+                maxDigits++;
+            }
+        }
+
+        String spaceString = "";
+        for (int i = 0; i < maxDigits - numDigits; i++){
+            spaceString += "\s";
+        }
+
+        return spaceString;
+    }
+
 
 }
