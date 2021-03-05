@@ -34,6 +34,24 @@ public class Field {
         }
     }
 
+    /*
+    Instead of doing this, you can just take the mine coords and get the surrounding numbers from there instead of looping
+     */
+
+//    private void generateNumbers2(){
+//        int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+//        for (MineBlock mine : mineCoords){
+//            for (int[] pair : indexes) {
+//                try {
+//                    Block adjacentSquare = getBlock(mine.getRow()+pair[0], mine.getCol()+pair[1]);
+//                    adjacentSquare.
+//                } catch (Exception e) {
+//                    //nothing
+//                }
+//            }
+//        }
+//    }
+
     private void generateNumbers(){
         for (int r = 0; r < numRows; r++){
             for (int c = 0; c < numCols; c++){
@@ -51,11 +69,9 @@ public class Field {
         int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
         for (int[] pair : indexes) {
-            try {
-                if (field[r + pair[0]][c + pair[1]].isMine())
+            if (isValidCoord(r + pair[0], c + pair[1])){
+                if (field[r + pair[0]][c + pair[1]] != null && field[r + pair[0]][c + pair[1]].isMine())
                     count++;
-            } catch (Exception e) {
-                //nothing
             }
         }
         return count;
@@ -146,6 +162,10 @@ public class Field {
         }
 
         return spaceString;
+    }
+
+    public boolean isValidCoord(int row, int col){
+        return 0 <= row && row <= getNumRows() - 1 && 0 <= col && col <= getNumCols() - 1;
     }
 
 

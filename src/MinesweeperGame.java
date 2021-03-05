@@ -102,7 +102,9 @@ public class MinesweeperGame extends Field{
         for (int i = 1; i < args.length; i++){
             String[] coords = args[i].split(",");
 
-            try {
+            if (!isValidCoord(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))){
+                System.err.println("Invalid coordinates");
+            }else{
                 Block s = getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
                 if (s.isMine() && !s.isFlag()) { // not working
                     isWinner = false;
@@ -114,8 +116,6 @@ public class MinesweeperGame extends Field{
                     revealedBlocks.add(s); // see if i can directly initialize
                     revealSurroundingBlanks(s, revealedBlocks);
                 }
-            } catch (IndexOutOfBoundsException e){ // for general regex (\d) if coordinates are out of bounds
-                System.out.println("Invalid coordinates.");
             }
 
         }
@@ -128,15 +128,15 @@ public class MinesweeperGame extends Field{
             for (int i = 1; i < args.length; i++) {
                 String[] coords = args[i].split(",");
 
-                try{
+                if (!isValidCoord(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))){
+                    System.err.println("Invalid coordinates");
+                }else{
                     Block s = getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
                     s.flag();
                     if (flagsLeft > 0 && !s.isReveal()) // not already revealed
                         flagsLeft--;
                     else
                         break;
-                }catch (IndexOutOfBoundsException e){
-                    System.out.println("Invalid coordinates.");
                 }
 
             }
@@ -146,21 +146,24 @@ public class MinesweeperGame extends Field{
     private void unflagPositions(String[] args){
         for (int i = 1; i < args.length; i++){
             String[] coords = args[i].split(",");
-            try{
+
+            if (!isValidCoord(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))){
+                System.err.println("Invalid coordinates");
+            }else{
                 Block s = getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
                 s.unflag();
                 flagsLeft++;
-            }catch (IndexOutOfBoundsException e){
-                System.out.println("Invalid coordinates.");
             }
         }
     }
 
+    //util
     private void revealSurroundingBlanks(Block s, ArrayList<Block> revealedSquares){
         int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
         for (int[] pair : indexes) {
-            try {
+
+            if (isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
                 Block adjacentBlock = getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
                 if (!revealedSquares.contains(adjacentBlock) && adjacentBlock.isBlankBlock()){ // is already revealed, then skip - add this function
                     adjacentBlock.reveal();
@@ -168,8 +171,6 @@ public class MinesweeperGame extends Field{
                     revealedSquares.add(adjacentBlock);
                     revealSurroundingBlanks(adjacentBlock, revealedSquares);
                 }
-            } catch (Exception e) {
-                //nothing
             }
         }
     }
@@ -179,13 +180,11 @@ public class MinesweeperGame extends Field{
         int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
         for (int[] pair : indexes) {
-            try {
+            if (isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
                 Block adjacentSquare = getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
                 if (!adjacentSquare.isMine()) {
                     adjacentSquare.reveal();
                 }
-            } catch (Exception e) {
-                //nothing
             }
         }
     }
@@ -257,5 +256,7 @@ public class MinesweeperGame extends Field{
         }
         flagsLeft = getNumMines();
     }
+
+
 
 }
