@@ -3,7 +3,7 @@ import build.Field;
 import build.Level;
 import build.MineBlock;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class MinesweeperGame extends Field{
@@ -32,44 +32,43 @@ public class MinesweeperGame extends Field{
         while(!isGameOver){
             printField();
             String c = s.nextLine();
-            //"(r|f|uf) ((\\d)+,(\\d)+( )?)+"
-//            if (c.matches(generateRegex())){ // make a command class?
             if (c.matches("((r|f|uf) (\\d+,\\d+( )?)+)|p|q|n|reset|auto|(gameover [1-3])")){ // will have index error if digits aren't in bound
                 String[] args = c.split(" ");
-                switch(args[0]){
-                    case "r" -> {
-                        revealPositions(args);
+                HashMap<String, CommandLine.Command> commandMap = new HashMap<>(){{
+                    put("r", new CommandLine.Reveal(MinesweeperGame.this, args));
+                    put("f", new CommandLine.Flag(MinesweeperGame.this, args));
+                    put("uf", new CommandLine.Unflag(MinesweeperGame.this, args));
+                    put("p", new CommandLine.Print(MinesweeperGame.this, args));
+                    //put("q", new CommandLine.Flag(MinesweeperGame.this, args));
+                    //put("auto", new CommandLine.Auto(MinesweeperGame.this, args));
+                    //put("reset", new CommandLine.Reset(MinesweeperGame.this, args));
+                }};
+                CommandLine.Command command = commandMap.get(args[0]);
+                System.out.println(command);
+                System.out.println(args[0]);
+                if (command != null){
+                    CommandLine.executeCommand(command);
+                }else{
+                    // unsupported or not working commands for now
+                    switch(args[0]){
+                        case "auto" -> autoPlay();
+                        case "reset" -> resetGame();
+                        case "q" -> {
+                            revealField();
+                            System.out.println("Don't give up next time!");
+                            isGameOver = true;
+                        }
+                        case "gameover" -> {
+                            gameOverMode = switch(args[1]){
+                                case "1" -> 1;
+                                case "2" -> 2;
+                                case "3" -> 3;
+                                default -> throw new IllegalStateException("Unexpected value: " + args[1]);
+                            };
+                            System.out.println("Gameover change to: " + args[1]);
+                        }
+                        default -> System.err.println("No command found");
                     }
-                    case "f" -> {
-                        flagPositions(args);
-                    }
-                    case "uf" -> {
-                        unflagPositions(args);
-                    }
-                    case "p" -> {
-                        printField();
-                    }
-                    case "q" -> {
-                        revealField();
-                        System.out.println("Don't give up next time!");
-                        isGameOver = true;
-                    }
-                    case "auto" -> {
-                        autoPlay();
-                    }
-                    case "reset" -> {
-                        resetGame();
-                    }
-                    case "gameover" -> {
-                        gameOverMode = switch(args[1]){ // no need for try because regex filters out invalid commands
-                            case "1" -> 1;
-                            case "2" -> 2;
-                            case "3" -> 3;
-                            default -> throw new IllegalStateException("Unexpected value: " + args[1]);
-                        };
-                        System.out.println("Gameover change to: " + args[1]);
-                    }
-                    default -> System.out.println("This command is not supported yet.");
                 }
                 if (!isGameOver) {
                     isGameOver = switch(gameOverMode){
@@ -81,7 +80,7 @@ public class MinesweeperGame extends Field{
                 }
                 System.out.println("Flags left: " + flagsLeft);
             }else {
-                System.out.println("Invalid command.");
+                System.out.println("Invalid syntax.");
             }
         }
 
@@ -98,96 +97,6 @@ public class MinesweeperGame extends Field{
         return "((r|f|uf) ((" + rowLimit + ")+,(" + colLimit + ")+( )?)+)|p|q|n|reset|auto|(gameover [1-3])";
     }
 
-    private void revealPositions(String[] args){
-        for (int i = 1; i < args.length; i++){
-            String[] coords = args[i].split(",");
-
-            if (!isValidCoord(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))){
-                System.err.println("Invalid coordinates");
-            }else{
-                Block s = getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
-                if (s.isMine() && !s.isFlag()) { // not working
-                    isWinner = false;
-                    isGameOver = true;
-                    break;
-                } else {
-                    s.reveal();
-                    ArrayList<Block> revealedBlocks = new ArrayList<Block>();
-                    revealedBlocks.add(s); // see if i can directly initialize
-                    revealSurroundingBlanks(s, revealedBlocks);
-                }
-            }
-
-        }
-    }
-
-    private void flagPositions(String[] args){
-        if (flagsLeft <= 0){
-            System.out.println("All flags are used.");
-        }else{
-            for (int i = 1; i < args.length; i++) {
-                String[] coords = args[i].split(",");
-
-                if (!isValidCoord(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))){
-                    System.err.println("Invalid coordinates");
-                }else{
-                    Block s = getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
-                    s.flag();
-                    if (flagsLeft > 0 && !s.isReveal()) // not already revealed
-                        flagsLeft--;
-                    else
-                        break;
-                }
-
-            }
-        }
-    }
-
-    private void unflagPositions(String[] args){
-        for (int i = 1; i < args.length; i++){
-            String[] coords = args[i].split(",");
-
-            if (!isValidCoord(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))){
-                System.err.println("Invalid coordinates");
-            }else{
-                Block s = getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
-                s.unflag();
-                flagsLeft++;
-            }
-        }
-    }
-
-    //util
-    private void revealSurroundingBlanks(Block s, ArrayList<Block> revealedSquares){
-        int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
-
-        for (int[] pair : indexes) {
-
-            if (isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
-                Block adjacentBlock = getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
-                if (!revealedSquares.contains(adjacentBlock) && adjacentBlock.isBlankBlock()){ // is already revealed, then skip - add this function
-                    adjacentBlock.reveal();
-                    revealAdjacentBlock(s); //to show numbers
-                    revealedSquares.add(adjacentBlock);
-                    revealSurroundingBlanks(adjacentBlock, revealedSquares);
-                }
-            }
-        }
-    }
-
-    // util method for reveal surrounding blocks
-    private void revealAdjacentBlock(Block s){
-        int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
-
-        for (int[] pair : indexes) {
-            if (isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
-                Block adjacentSquare = getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
-                if (!adjacentSquare.isMine()) {
-                    adjacentSquare.reveal();
-                }
-            }
-        }
-    }
 
     private boolean areAllMinesFlagged(){
         MineBlock[] mineCoords = getMineCoords();
@@ -257,6 +166,16 @@ public class MinesweeperGame extends Field{
         flagsLeft = getNumMines();
     }
 
+    public int getFlagsLeft() {
+        return flagsLeft;
+    }
 
+    public void setFlagsLeft(int newAmount){
+        this.flagsLeft = newAmount;
+    }
 
+    public void gameOverLoser(){
+        isWinner = false;
+        isGameOver = true;
+    }
 }
