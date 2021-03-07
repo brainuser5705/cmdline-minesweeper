@@ -3,8 +3,7 @@ import build.Field;
 import build.Level;
 import build.MineBlock;
 
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
 
 public class MinesweeperGame extends Field{
 
@@ -27,48 +26,19 @@ public class MinesweeperGame extends Field{
     }
 
     public void playMinesweeper(){
+        CommandLine cmd = new CommandLine(this);
         Scanner s = new Scanner(System.in);
 
         while(!isGameOver){
             printField();
             String c = s.nextLine();
-            if (c.matches("((r|f|uf) (\\d+,\\d+( )?)+)|p|q|n|reset|auto|(gameover [1-3])")){ // will have index error if digits aren't in bound
+            if (c.matches("((r|f|uf) (\\d+,\\d+( )?)+)|p|q|n|reset|auto|(gmode [1-3])|a")){ // will have index error if digits aren't in bound
                 String[] args = c.split(" ");
-                HashMap<String, CommandLine.Command> commandMap = new HashMap<>(){{
-                    put("r", new CommandLine.Reveal(MinesweeperGame.this, args));
-                    put("f", new CommandLine.Flag(MinesweeperGame.this, args));
-                    put("uf", new CommandLine.Unflag(MinesweeperGame.this, args));
-                    put("p", new CommandLine.Print(MinesweeperGame.this, args));
-                    //put("q", new CommandLine.Flag(MinesweeperGame.this, args));
-                    //put("auto", new CommandLine.Auto(MinesweeperGame.this, args));
-                    //put("reset", new CommandLine.Reset(MinesweeperGame.this, args));
-                }};
-                CommandLine.Command command = commandMap.get(args[0]);
-                System.out.println(command);
-                System.out.println(args[0]);
+                CommandLine.Command command = cmd.commandBuilder(args);
                 if (command != null){
-                    CommandLine.executeCommand(command);
+                    cmd.executeCommand(command);
                 }else{
-                    // unsupported or not working commands for now
-                    switch(args[0]){
-                        case "auto" -> autoPlay();
-                        case "reset" -> resetGame();
-                        case "q" -> {
-                            revealField();
-                            System.out.println("Don't give up next time!");
-                            isGameOver = true;
-                        }
-                        case "gameover" -> {
-                            gameOverMode = switch(args[1]){
-                                case "1" -> 1;
-                                case "2" -> 2;
-                                case "3" -> 3;
-                                default -> throw new IllegalStateException("Unexpected value: " + args[1]);
-                            };
-                            System.out.println("Gameover change to: " + args[1]);
-                        }
-                        default -> System.err.println("No command found");
-                    }
+                    System.out.println("No command found");
                 }
                 if (!isGameOver) {
                     isGameOver = switch(gameOverMode){
@@ -142,30 +112,6 @@ public class MinesweeperGame extends Field{
         return true;
     }
 
-    private void autoPlay(){
-        Block[][] field = getField();
-        for (Block[] row : field){
-            for (Block block : row){
-                if (block.isMine()) {
-                    block.flag();
-                } else {
-                    block.reveal();
-                }
-            }
-        }
-        flagsLeft = 0;
-    }
-
-    private void resetGame(){
-        Block[][] field = getField(); // make this a instance var
-        for (Block[] row : field){
-            for (Block block : row){
-                block.forceUnreveal();
-            }
-        }
-        flagsLeft = getNumMines();
-    }
-
     public int getFlagsLeft() {
         return flagsLeft;
     }
@@ -177,5 +123,9 @@ public class MinesweeperGame extends Field{
     public void gameOverLoser(){
         isWinner = false;
         isGameOver = true;
+    }
+
+    public void setGameOverMode(int mode){
+        this.gameOverMode = mode;
     }
 }
