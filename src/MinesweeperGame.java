@@ -32,7 +32,7 @@ public class MinesweeperGame extends Field{
         while(!isGameOver){
             printField();
             String c = s.nextLine();
-            if (c.matches("((r|f|uf) (\\d+,\\d+( )?)+)|p|q|n|reset|auto|(gmode [1-3])|a")){ // will have index error if digits aren't in bound
+//            if (c.matches("((r|f|uf) (\\d+,\\d+( )?)+)|p|q|n|reset|auto|(gmode [1-3])|a")){ // will have index error if digits aren't in bound
                 String[] args = c.split(" ");
                 CommandLine.Command command = cmd.commandBuilder(args);
                 if (command != null){
@@ -49,9 +49,9 @@ public class MinesweeperGame extends Field{
                     };
                 }
                 System.out.println("Flags left: " + flagsLeft);
-            }else {
-                System.out.println("Invalid syntax.");
-            }
+//            }else {
+//                System.out.println("Invalid syntax.");
+//            }
         }
 
         revealField();
@@ -68,6 +68,7 @@ public class MinesweeperGame extends Field{
     }
 
 
+    // util class for gameover mode 2
     private boolean areAllMinesFlagged(){
         MineBlock[] mineCoords = getMineCoords();
         for (MineBlock mine : mineCoords){

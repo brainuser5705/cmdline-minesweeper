@@ -1,6 +1,8 @@
 import build.Block;
+import build.NumBlock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -10,17 +12,20 @@ public class CommandLine{
     String[] args; // the arguments passed in
     String[] coords; // the coordinates arguments
 
+    int[][] ADJACENT_INDEXES = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+
     public CommandLine(MinesweeperGame field) {
         this.game = field;
     }
 
     public void executeCommand(Command c){
-        System.out.println(c);
         if (c instanceof GameCommand){
+            System.out.println(c.toString());
             c.run();
         } else {
             for (int i = 1; i < args.length; i++) {
                 coords = args[i].split(",");
+                System.out.print(c.toString());
 
                 if (!game.isValidCoord(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]))) {
                     System.err.println("Invalid coordinates: " + coords[0] + "," + coords[1]);
@@ -40,15 +45,26 @@ public class CommandLine{
             put("auto", new Auto()); // can't be execute command because no params
             put("reset", new Reset());
             put("gmode", new GameOver());
+            put("chord", new Chord());
         }};
         this.args = input;
         return commandMap.get(input[0]);
+    }
+
+    public String coordToString(String[] coords){
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < coords.length; i += 2){
+            result.append("(").append(coords[i]).append(",").append(coords[i + 1]).append(")").append("\n");
+        }
+        return result.toString();
     }
 
     public static interface Command extends Runnable {
 
         @Override
         public abstract void run();
+
+        public String toString();
 
     }
 
@@ -78,9 +94,9 @@ public class CommandLine{
         }
 
         private void revealSurroundingBlanks(Block s, ArrayList<Block> revealedSquares){
-            int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+            //int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
-            for (int[] pair : indexes) {
+            for (int[] pair : ADJACENT_INDEXES) {
 
                 if (game.isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
                     Block adjacentBlock = game.getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
@@ -88,7 +104,7 @@ public class CommandLine{
                         adjacentBlock.reveal();
                         revealAdjacentBlock(s); //to show numbers
                         revealedSquares.add(adjacentBlock);
-                        revealSurroundingBlanks(adjacentBlock, revealedSquares);
+                        revealSurroundingBlanks(adjacentBlock, revealedSquares); //recursion with "accumulator" list
                     }
                 }
             }
@@ -96,9 +112,9 @@ public class CommandLine{
 
         // util method for reveal surrounding blocks
         private void revealAdjacentBlock(Block s){
-            int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+            //int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
-            for (int[] pair : indexes) {
+            for (int[] pair : ADJACENT_INDEXES) {
                 if (game.isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
                     Block adjacentSquare = game.getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
                     if (!adjacentSquare.isMine()) {
@@ -106,6 +122,10 @@ public class CommandLine{
                     }
                 }
             }
+        }
+
+        public String toString(){
+            return "Revealing block: " + coordToString(coords);
         }
 
     }
@@ -124,6 +144,10 @@ public class CommandLine{
             }
         }
 
+        public String toString(){
+            return "Flagging block: " + coordToString(coords);
+        }
+
     }
 
     private class Unflag implements Command{
@@ -133,6 +157,10 @@ public class CommandLine{
             Block s = game.getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
             s.unflag();
             game.setFlagsLeft(game.getFlagsLeft() + 1);
+        }
+
+        public String toString(){
+            return "Unflagging block: " + coordToString(coords);
         }
 
     }
@@ -153,6 +181,10 @@ public class CommandLine{
             game.setFlagsLeft(0);
         }
 
+        public String toString(){
+            return "Auto play...";
+        }
+
     }
 
     private class Reset implements GameCommand{
@@ -168,6 +200,10 @@ public class CommandLine{
             game.setFlagsLeft(game.getNumMines());
         }
 
+        public String toString(){
+            return "Resetting game...";
+        }
+
     }
 
     private class Quit implements GameCommand{
@@ -179,23 +215,109 @@ public class CommandLine{
             game.gameOverLoser();
         }
 
+        public String toString(){
+            return "Quitting game...";
+        }
+
     }
 
     private class GameOver implements GameCommand{
 
         @Override
         public void run() {
-            game.setGameOverMode(
+            int gamemode = Integer.parseInt(args[1]);
+            game.setGameOverMode(gamemode);
+        }
 
-                switch(args[1]){ // no need for try because regex filters out invalid commands
-                    case "1" -> 1;
-                    case "2" -> 2;
-                    case "3" -> 3;
-                    default -> throw new IllegalStateException("Invalid gameover mode: " + args[1]);
+        public String toString(){
+            return "Changing game over mode to: " + args[1];
+        }
 
-            });
+    }
 
-            System.out.println("Gameover change to: " + args[1]);
+    private class Chord implements Command{ // make this an inner class of reveal since it uses reveal methods?
+
+        @Override
+        public void run() {
+            Block block = game.getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
+            // check that it has valid number of surrounding flags
+            // if yes, then reveal surrounding non-flagged cells and their adjacent cells
+            //make sure that the block is revealed
+            if (!(block instanceof NumBlock)) {
+                System.err.println("Cannot chord this block: " + coordToString(coords));
+            }else {
+                if (!block.isBlankBlock() && block.isReveal() && hasValidFlags((NumBlock) block)) {
+                    // call the reveal methods...
+                    System.out.println("yeep");
+                    ArrayList<Block> revealedBlocks = new ArrayList<Block>();
+                    revealedBlocks.add(block); // see if i can directly initialize
+                    revealSurroundingBlanks(block, revealedBlocks);
+                    // good but does not reveal flags there should be a parameter.
+                }else{
+                    System.out.println("nope");
+                }
+            }
+
+        }
+
+        private void revealSurroundingBlanks(Block s, ArrayList<Block> revealedSquares){
+            //int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+
+            for (int[] pair : ADJACENT_INDEXES) {
+
+                if (game.isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
+                    Block adjacentBlock = game.getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
+                    if (!revealedSquares.contains(adjacentBlock) && adjacentBlock.isBlankBlock()){ // is already revealed, then skip - add this function
+                        adjacentBlock.reveal();
+                        revealAdjacentBlock(s); //to show numbers
+                        revealedSquares.add(adjacentBlock);
+                        revealSurroundingBlanks(adjacentBlock, revealedSquares); //recursion with "accumulator" list
+                    }
+                }
+            }
+        }
+
+        // util method for reveal surrounding blocks
+        private void revealAdjacentBlock(Block s){
+            //int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+
+            for (int[] pair : ADJACENT_INDEXES) {
+                if (game.isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
+                    Block adjacentSquare = game.getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
+                    if (!adjacentSquare.isMine()) {
+                        adjacentSquare.reveal();
+                    }else{
+                        game.gameOverLoser();
+                        break;
+                    }
+                }
+            }
+        }
+
+        public String toString(){
+            return "Chording blocks: " + coordToString(coords);
+        }
+
+        public boolean hasValidFlags(NumBlock block){
+
+            int row = block.getRow();
+            int col = block.getCol();
+
+            int flags = 0;
+
+            for (int[] pair : ADJACENT_INDEXES){
+                if (game.isValidCoord(row + pair[0], col + pair[1])){
+                    if (game.getBlock(row + pair[0], col + pair[1]).isFlag()){
+                        flags++;
+                    }
+                }
+            }
+
+            System.out.println(flags);
+            System.out.println(block.getNum());
+
+            return flags == block.getNum();
+
         }
 
     }

@@ -11,6 +11,7 @@ public class MinesweeperTest {
         Scanner s = new Scanner(System.in);
 
         MinesweeperGame game = null;
+        // some exceptions here with a while loop for game == null
         switch (s.nextInt()) {
             case 1 -> game = new MinesweeperGame(Level.BEGINNER);
             case 2 -> game = new MinesweeperGame(Level.INTERMEDIATE);
