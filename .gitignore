@@ -1,2 +1,6 @@
 *.class
 **/src/other
+notes.txt
+/shelf/
+/workspace.xml
+out

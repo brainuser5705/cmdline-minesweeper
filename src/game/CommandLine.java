@@ -1,3 +1,5 @@
+package game;
+
 import build.Block;
 import build.NumBlock;
 
@@ -122,6 +124,7 @@ public class CommandLine{
                     }
                 }
             }
+
         }
 
         public String toString(){
