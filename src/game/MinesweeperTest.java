@@ -6,7 +6,7 @@ import java.util.Scanner;
 
 public class MinesweeperTest {
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws Exception {
         System.out.println("\033[36mCommand-line Minesweeper\033[0m");
         System.out.println("Levels: \n 1 - Beginner (10 mines, 8X8) \n 2 - Intermediate (40 mines, 16X16) \n 3 - Expert (99 mines, 16X24)");
         System.out.println("For custom levels, input '4 - <mine> <# of rows> <# of cols>'");
