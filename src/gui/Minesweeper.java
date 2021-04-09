@@ -12,12 +12,12 @@ import java.util.Scanner;
 public class Minesweeper extends Field{
 
     private int flagsLeft;
-    private int gameOverMode = 1;
+    private int gameOverMode = 2;
 
     private boolean isGameOver;
     private boolean isWinner;
 
-    private List<Observer<Minesweeper>> observers = new ArrayList<>();;
+    private List<Observer<Minesweeper, Object>> observers = new ArrayList<>();;
 
     public Minesweeper(int numMines, int numRows, int numCols){
         super(numMines, numRows, numCols);
@@ -31,42 +31,61 @@ public class Minesweeper extends Field{
         flagsLeft = level.getNumMines();
     }
 
+    public void isGameOver(){
+        if (gameOver()){
+            notifyObservers("winner");
+        }else if (isGameOver){
+            notifyObservers("death");
+        }
+    }
 
-    private void reveal(Block block){
+    private boolean gameOver(){ // game over condition is all blocks are revealed and all mines are flagged - this will eliminate guessing (in a way)
+        Block[][] field = getField();
+        for (Block[] row : field){
+            for (Block block : row){
+                if ((block.isMine() && !block.isFlag()) || (!block.isMine() && !block.isReveal())){
+                    return false;
+                }
+            }
+        }
+        flagsLeft = 0;
+        isWinner = true;
+        return true;
+    }
 
-        if (block.isMine() && !block.isFlag()) { // not working
-            isWinner = false;
-            isGameOver = true;
-        } else {
-            block.reveal();
-            ArrayList<Block> revealedBlocks = new ArrayList<Block>();
-            revealedBlocks.add(block); // see if i can directly initialize
-            revealSurroundingBlanks(block, revealedBlocks);
+    public void reveal(Block block){
+
+        block.reveal();
+
+        if (!block.isFlag()){
+            if (block.isMine()) {
+                isWinner = false;
+                isGameOver = true;
+            } else {
+                ArrayList<Block> revealedBlocks = new ArrayList<>();
+                revealedBlocks.add(block);
+                revealSurroundingBlanks(block, revealedBlocks);
+            }
         }
 
-        notifyObservers();
+        notifyObservers(null);
 
     }
 
-    private void flag(Block block){
-        if (flagsLeft <= 0){
-            System.out.println("All flags are used.");
-        }else{
-            block.flag();
-            if (flagsLeft > 0 && !block.isReveal()) // not already revealed
-                flagsLeft--;
+    public void toggleFlag(Block block){
+        if (block.isFlag()){
+            block.unflag();
+            flagsLeft++;
+        }else if (!block.isFlag()){
+            if (flagsLeft <= 0){
+                System.out.println("All flags are used.");
+            }else{
+                block.flag();
+                if (flagsLeft > 0 && !block.isReveal()) // not already revealed
+                    flagsLeft--;
+            }
         }
-
-        notifyObservers();
-
-    }
-
-    private void unflag(Block block){
-        block.unflag();
-        flagsLeft++;
-
-        notifyObservers();
-
+        notifyObservers(null);
     }
 
     //util
@@ -147,7 +166,7 @@ public class Minesweeper extends Field{
         return true;
     }
 
-    private void autoPlay(){
+    public void autoPlay(){
         Block[][] field = getField();
         for (Block[] row : field){
             for (Block block : row){
@@ -160,11 +179,11 @@ public class Minesweeper extends Field{
         }
         flagsLeft = 0;
 
-        notifyObservers();
+        notifyObservers(null);
 
     }
 
-    private void resetGame(){
+    public void resetGame(){
         Block[][] field = getField(); // make this a instance var
         for (Block[] row : field){
             for (Block block : row){
@@ -173,7 +192,7 @@ public class Minesweeper extends Field{
         }
         flagsLeft = getNumMines();
 
-        notifyObservers();
+        notifyObservers(null);
 
     }
 
@@ -181,13 +200,13 @@ public class Minesweeper extends Field{
         return flagsLeft;
     }
 
-    public void addObserver(Observer<Minesweeper> observer){
+    public void addObserver(Observer<Minesweeper, Object> observer){
         this.observers.add(observer);
     }
 
-    public void notifyObservers(){
-        for (Observer<Minesweeper> observer : observers){
-            observer.update(this);
+    public void notifyObservers(String args){
+        for (var observer : observers){
+            observer.update(this, args);
         }
     }
 
