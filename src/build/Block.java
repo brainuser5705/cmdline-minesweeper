@@ -57,6 +57,7 @@ public abstract class Block {
     }
 
     public String forceReveal(){
+        isReveal = true;
         return "[" + content + "]";
     }
 
