@@ -17,7 +17,7 @@ public interface GameOver extends Callable<Boolean>{
 
         // is there another runnable class that can accept parameters instead of making a constructor to assign variables
         @Override
-        public Boolean call() throws Exception {
+        public Boolean call() {
             Block[][] field = game.getField();
             for (Block[] row : field){
                 for (Block block : row){
@@ -42,7 +42,7 @@ public interface GameOver extends Callable<Boolean>{
 
         // is there another runnable class that can accept parameters instead of making a constructor to assign variables
         @Override
-        public Boolean call() throws Exception {
+        public Boolean call() {
             if (game.getFlagsLeft() == 0 && areAllMinesFlagged()) {
                 return true;
             }
@@ -73,7 +73,7 @@ public interface GameOver extends Callable<Boolean>{
 
         // is there another runnable class that can accept parameters instead of making a constructor to assign variables
         @Override
-        public Boolean call() throws Exception {
+        public Boolean call() {
             Block[][] field = game.getField();
             for (Block[] row : field){
                 for (Block block : row){
@@ -98,8 +98,14 @@ public interface GameOver extends Callable<Boolean>{
             this.checkMethod = checkMethod;
         }
 
-        public boolean check() throws Exception {
-            return checkMethod.call();
+        public boolean check() {
+            boolean value = false;
+            try{
+                value = checkMethod.call();
+            }catch (Exception e){
+                System.out.println("Error occur in game over mode");
+            }
+            return value;
         }
 
     }

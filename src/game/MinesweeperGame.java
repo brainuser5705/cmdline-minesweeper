@@ -35,7 +35,7 @@ public class MinesweeperGame extends Field{
         return instance;
     }
 
-    public void playMinesweeper() throws Exception {
+    public void playMinesweeper() {
         CommandLine cmd = new CommandLine(this);
         Scanner s = new Scanner(System.in);
 
@@ -60,10 +60,9 @@ public class MinesweeperGame extends Field{
                     case 1 -> GameOver.Mode.GAME_OVER_ONE;
                     case 2 -> GameOver.Mode.GAME_OVER_TWO;
                     case 3 -> GameOver.Mode.GAME_OVER_THREE;
-                    default -> null;
+                    default -> throw new IllegalStateException("Unexpected value: " + gameOverMode);
                 };
 
-                assert mode != null;
                 isGameOver = mode.check();
             }
 
