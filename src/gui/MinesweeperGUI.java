@@ -26,14 +26,19 @@ public class MinesweeperGUI extends Application implements Observer<MinesweeperM
     Image MINE = new Image(getClass().getResourceAsStream("resources/gowon_mine.jpg"));
     Image OOPS = new Image(getClass().getResourceAsStream("resources/oops.jpg"));
     Image BLANK = new Image(getClass().getResourceAsStream("resources/blank.png"));
+    Image WIN = new Image(getClass().getResourceAsStream("resources/rose_win.png"));
+    Image LOSE = new Image(getClass().getResourceAsStream("resources/rose_lose.png"));
+    Image CLICK = new Image(getClass().getResourceAsStream("resources/rose_click.png"));
+    Image PLAYING = new Image(getClass().getResourceAsStream("resources/rose_playing.png"));
 
     MinesweeperModel game;
 
     GridPane mineGrid;
     Label numMines = new Label();
-    Button resetButton = new Button("Reset game");
-    Button newGameButton = new Button("New game");
+    Button resetButton = new Button("Reset button");
+    Button newGameButton = new Button();
 
+    boolean isPlaying = true; // so button events doesn't execute at the last button release after gameover
 
     public static void main(String[] args){
         Application.launch( args );
@@ -41,7 +46,8 @@ public class MinesweeperGUI extends Application implements Observer<MinesweeperM
 
     @Override
     public void init(){
-        game = new MinesweeperModel(Level.EXPERT);
+        isPlaying = true;
+        game = new MinesweeperModel(Level.BEGINNER);
         game.resetGame();
         game.addObserver(this);
         System.out.println("Initialized model and added an observer!");
@@ -61,6 +67,8 @@ public class MinesweeperGUI extends Application implements Observer<MinesweeperM
             start(stage);
         });
 
+        newGameButton.setGraphic(new ImageView(PLAYING));
+
         // have to declare a new grid pane for every new game
         mineGrid = new GridPane();
 
@@ -76,6 +84,12 @@ public class MinesweeperGUI extends Application implements Observer<MinesweeperM
                             }else if (mouseEvent.isSecondaryButtonDown()){
                                 game.toggleFlag(block);
                             }
+                            if (isPlaying) newGameButton.setGraphic(new ImageView(CLICK));
+                        }
+                );
+                button.setOnMouseReleased(
+                        mouseEvent -> {
+                            if (isPlaying) newGameButton.setGraphic(new ImageView(PLAYING));
                         }
                 );
                 mineGrid.add(button, col, row);
@@ -135,17 +149,21 @@ public class MinesweeperGUI extends Application implements Observer<MinesweeperM
         }
 
         if (specialCommand instanceof String){
+            isPlaying = false;
             String s = (String) specialCommand;
             if (s.equals("death")) {
+                newGameButton.setGraphic(new ImageView(LOSE));
                 System.out.println("You lose");
                 //System.exit(0);
                 // different method for ending game...
             }else if (s.equals("winner")){
+                newGameButton.setGraphic(new ImageView(WIN));
                 System.out.println("You win!");
             }
         }else {
             game.isGameOver();
         }
+
 
     }
 
