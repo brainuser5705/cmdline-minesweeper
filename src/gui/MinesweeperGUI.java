@@ -4,23 +4,16 @@ import build.Block;
 import build.Level;
 import build.NumBlock;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-import java.util.Scanner;
-
-public class MinesweeperGUI extends Application implements Observer<Minesweeper, Object> {
+public class MinesweeperGUI extends Application implements Observer<MinesweeperModel, Object> {
 
     Image ONE = new Image(getClass().getResourceAsStream("resources/one.png"));
     Image TWO = new Image(getClass().getResourceAsStream("resources/two.png"));
@@ -34,10 +27,13 @@ public class MinesweeperGUI extends Application implements Observer<Minesweeper,
     Image OOPS = new Image(getClass().getResourceAsStream("resources/oops.jpg"));
     Image BLANK = new Image(getClass().getResourceAsStream("resources/blank.png"));
 
-    Minesweeper game;
+    MinesweeperModel game;
 
-    GridPane mineGrid = new GridPane();
+    GridPane mineGrid;
     Label numMines = new Label();
+    Button resetButton = new Button("Reset game");
+    Button newGameButton = new Button("New game");
+
 
     public static void main(String[] args){
         Application.launch( args );
@@ -45,28 +41,36 @@ public class MinesweeperGUI extends Application implements Observer<Minesweeper,
 
     @Override
     public void init(){
-        game = new Minesweeper(Level.BEGINNER);
+        game = new MinesweeperModel(Level.EXPERT);
+        game.resetGame();
         game.addObserver(this);
         System.out.println("Initialized model and added an observer!");
     }
 
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage){
 
         VBox mainPane = new VBox();
 
         numMines.setText(game.getFlagsLeft() + " flags left");
 
+        resetButton.setOnAction(e -> game.resetGame());
+
+        newGameButton.setOnAction(e -> {
+            init();
+            start(stage);
+        });
+
+        // have to declare a new grid pane for every new game
+        mineGrid = new GridPane();
+
         for(int row = 0; row < game.getNumRows(); row++){
             for (int col = 0; col < game.getNumCols(); col++){
                 Button button = new Button();
                 Block block = game.getBlock(row,col);
-                //System.out.println("Row: " + block.getRow() + ", Col: " + block.getCol());
                 button.setGraphic(new ImageView(BLANK));
-                //button.setOnAction(e -> game.reveal(block));
                 button.setOnMousePressed(
                         mouseEvent -> {
-                            //game.reveal(block);
                             if (mouseEvent.isPrimaryButtonDown()){
                                 game.reveal(block);
                             }else if (mouseEvent.isSecondaryButtonDown()){
@@ -78,7 +82,7 @@ public class MinesweeperGUI extends Application implements Observer<Minesweeper,
             }
         }
 
-        mainPane.getChildren().addAll(numMines, mineGrid);
+        mainPane.getChildren().addAll(numMines, resetButton, newGameButton, mineGrid);
 
         stage.setScene(new Scene(mainPane));
         stage.setTitle("Minesweeper");
@@ -86,8 +90,10 @@ public class MinesweeperGUI extends Application implements Observer<Minesweeper,
     }
 
     @Override
-    public void update(Minesweeper minesweeper, Object specialCommand) {
+    public void update(MinesweeperModel minesweeperModel, Object specialCommand){
         game.printField();
+
+        numMines.setText(game.getFlagsLeft() + " flags left");
 
         for (int row = 0; row < game.getNumRows(); row++) {
             for (int col = 0; col < game.getNumCols(); col++) {
@@ -121,6 +127,7 @@ public class MinesweeperGUI extends Application implements Observer<Minesweeper,
                 }else if (block.isFlag()){
                     button.setGraphic(new ImageView(OOPS));
                 }else{
+                    button.setDisable(false);
                     button.setGraphic(new ImageView(BLANK));
                 }
 

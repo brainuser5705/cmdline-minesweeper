@@ -1,45 +1,40 @@
 package gui;
 
-import build.Block;
-import build.Field;
-import build.Level;
-import build.MineBlock;
+import build.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
-public class Minesweeper extends Field{
+public class MinesweeperModel extends Field{
 
     private int flagsLeft;
-    private int gameOverMode = 2;
 
-    private boolean isGameOver;
-    private boolean isWinner;
+    private boolean isLoser;
 
-    private List<Observer<Minesweeper, Object>> observers = new ArrayList<>();;
+    private List<Observer<MinesweeperModel, Object>> observers = new ArrayList<>();;
 
-    public Minesweeper(int numMines, int numRows, int numCols){
+    public MinesweeperModel(int numMines, int numRows, int numCols){
         super(numMines, numRows, numCols);
-        isGameOver = false;
-        isWinner = true;
+        isLoser = false;
         flagsLeft = numMines;
     }
 
-    public Minesweeper(Level level){
+    public MinesweeperModel(Level level){
         super(level.getNumMines(), level.getNumRows(), level.getNumCols());
         flagsLeft = level.getNumMines();
     }
 
     public void isGameOver(){
-        if (gameOver()){
+        if (checkWinningGame()){
+            revealField();
             notifyObservers("winner");
-        }else if (isGameOver){
+        }else if (isLoser){
+            revealField();
             notifyObservers("death");
         }
     }
 
-    private boolean gameOver(){ // game over condition is all blocks are revealed and all mines are flagged - this will eliminate guessing (in a way)
+    private boolean checkWinningGame(){ // game over condition is all blocks are revealed and all mines are flagged - this will eliminate guessing (in a way)
         Block[][] field = getField();
         for (Block[] row : field){
             for (Block block : row){
@@ -49,7 +44,6 @@ public class Minesweeper extends Field{
             }
         }
         flagsLeft = 0;
-        isWinner = true;
         return true;
     }
 
@@ -59,8 +53,7 @@ public class Minesweeper extends Field{
 
         if (!block.isFlag()){
             if (block.isMine()) {
-                isWinner = false;
-                isGameOver = true;
+                isLoser = true;
             } else {
                 ArrayList<Block> revealedBlocks = new ArrayList<>();
                 revealedBlocks.add(block);
@@ -121,51 +114,6 @@ public class Minesweeper extends Field{
 
     }
 
-    //util
-    private boolean areAllMinesFlagged(){
-        MineBlock[] mineCoords = getMineCoords();
-        for (MineBlock mine : mineCoords){
-            if (!mine.isFlag()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean gameOver1(){ // game over condition is all blocks are revealed and all mines are flagged - this will eliminate guessing (in a way)
-        Block[][] field = getField();
-        for (Block[] row : field){
-            for (Block block : row){
-                if ((block.isMine() && !block.isFlag()) || (!block.isMine() && !block.isReveal())){
-                    return false;
-                }
-            }
-        }
-        flagsLeft = 0;
-        isWinner = true;
-        return true;
-    }
-
-    private boolean gameOver2(){ // if all flags are used and all mines are flagged
-        if (flagsLeft == 0 && areAllMinesFlagged()) {
-            isWinner = true;
-            return true;
-        }
-        return false;
-    }
-
-    private boolean gameOver3(){ // game over condition is all blocks are revealed
-        Block[][] field = getField();
-        for (Block[] row : field){
-            for (Block block : row){
-                if (!block.isMine() && !block.isReveal()) return false;
-            }
-        }
-        flagsLeft = 0;
-        isWinner = true;
-        return true;
-    }
-
     public void autoPlay(){
         Block[][] field = getField();
         for (Block[] row : field){
@@ -180,7 +128,6 @@ public class Minesweeper extends Field{
         flagsLeft = 0;
 
         notifyObservers(null);
-
     }
 
     public void resetGame(){
@@ -200,7 +147,7 @@ public class Minesweeper extends Field{
         return flagsLeft;
     }
 
-    public void addObserver(Observer<Minesweeper, Object> observer){
+    public void addObserver(Observer<MinesweeperModel, Object> observer){
         this.observers.add(observer);
     }
 
