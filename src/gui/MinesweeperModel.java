@@ -9,17 +9,23 @@ public class MinesweeperModel extends Field{
 
     private int flagsLeft;
 
-    private int gameOverMode = 1;
+    private int gameOverMode;
 
-    private boolean isLoser;
+    private boolean isLoser = false;
 
-    private List<Observer<MinesweeperModel, Object>> observers = new ArrayList<>();;
+    private List<Observer<MinesweeperModel, String>> observers = new ArrayList<Observer<MinesweeperModel, String>>();
+
+    private int[][] INDEXES = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
     public MinesweeperModel(int numMines, int numRows, int numCols, int gameOverMode){
         super(numMines, numRows, numCols);
-        isLoser = false;
         flagsLeft = numMines;
         this.gameOverMode = gameOverMode;
+    }
+
+    public void setGameOverMode(int mode){
+        this.gameOverMode = mode;
+        notifyObservers(null);
     }
 
     public void isGameOver(){
@@ -36,14 +42,9 @@ public class MinesweeperModel extends Field{
             notifyObservers("winner");
         }else if (isLoser){
             revealField();
-            notifyObservers("death");
+            notifyObservers("loser");
         }
 
-    }
-
-    public void setGameOverMode(int index){
-        this.gameOverMode = index;
-        notifyObservers(null);
     }
 
     private boolean checkWinningGame1(){
@@ -113,15 +114,13 @@ public class MinesweeperModel extends Field{
 
     //util
     private void revealSurroundingBlanks(Block s, ArrayList<Block> revealedSquares){
-        int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
-        for (int[] pair : indexes) {
+        for (int[] pair : INDEXES) {
 
             if (isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
                 Block adjacentBlock = getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
                 if (!revealedSquares.contains(adjacentBlock) && adjacentBlock.isBlankBlock()){ // is already revealed, then skip - add this function
                     adjacentBlock.reveal();
-                    //revealAdjacentBlock(s); //to show numbers
                     revealedSquares.add(adjacentBlock);
                     revealSurroundingBlanks(adjacentBlock, revealedSquares);
                 }
@@ -137,9 +136,8 @@ public class MinesweeperModel extends Field{
 
     // util method for reveal surrounding blocks
     private void revealAdjacentBlock(Block s){
-        int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
-        for (int[] pair : indexes) {
+        for (int[] pair : INDEXES) {
             if (isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
                 Block adjacentSquare = getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
                 if (!adjacentSquare.isMine()){
@@ -154,12 +152,12 @@ public class MinesweeperModel extends Field{
         return flagsLeft;
     }
 
-    public void addObserver(Observer<MinesweeperModel, Object> observer){
+    public void addObserver(Observer<MinesweeperModel, String> observer){
         this.observers.add(observer);
     }
 
     public void notifyObservers(String args){
-        for (var observer : observers){
+        for (Observer<MinesweeperModel, String> observer : observers){
             observer.update(this, args);
         }
     }
