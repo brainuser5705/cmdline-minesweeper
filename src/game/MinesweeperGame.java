@@ -72,6 +72,7 @@ public class MinesweeperGame extends Field{
 
         // end game
         revealField();
+        printField();
         if (isWinner)
             System.out.println("You win!");
         else
