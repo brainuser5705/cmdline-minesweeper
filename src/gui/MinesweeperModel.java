@@ -9,32 +9,44 @@ public class MinesweeperModel extends Field{
 
     private int flagsLeft;
 
+    private int gameOverMode = 1;
+
     private boolean isLoser;
 
     private List<Observer<MinesweeperModel, Object>> observers = new ArrayList<>();;
 
-    public MinesweeperModel(int numMines, int numRows, int numCols){
+    public MinesweeperModel(int numMines, int numRows, int numCols, int gameOverMode){
         super(numMines, numRows, numCols);
         isLoser = false;
         flagsLeft = numMines;
-    }
-
-    public MinesweeperModel(Level level){
-        super(level.getNumMines(), level.getNumRows(), level.getNumCols());
-        flagsLeft = level.getNumMines();
+        this.gameOverMode = gameOverMode;
     }
 
     public void isGameOver(){
-        if (checkWinningGame()){
+
+        boolean isWinner = switch(gameOverMode){
+            case 1 -> checkWinningGame1();
+            case 2 -> checkWinningGame2();
+            case 3 -> checkWinningGame3();
+            default -> throw new IllegalStateException("Unexpected value: " + gameOverMode);
+        };
+
+        if (isWinner){
             revealField();
             notifyObservers("winner");
         }else if (isLoser){
             revealField();
             notifyObservers("death");
         }
+
     }
 
-    private boolean checkWinningGame(){ // game over condition is all blocks are revealed and all mines are flagged - this will eliminate guessing (in a way)
+    public void setGameOverMode(int index){
+        this.gameOverMode = index;
+        notifyObservers(null);
+    }
+
+    private boolean checkWinningGame1(){
         Block[][] field = getField();
         for (Block[] row : field){
             for (Block block : row){
@@ -43,7 +55,29 @@ public class MinesweeperModel extends Field{
                 }
             }
         }
-        flagsLeft = 0;
+        return true;
+    }
+
+    private boolean checkWinningGame2(){
+        boolean allMinesFlagged = true;
+        MineBlock[] mineCoords = getMineCoords();
+        for (MineBlock mine : mineCoords){
+            if (!mine.isFlag()) {
+                allMinesFlagged = false;
+                break;
+            }
+        }
+
+        return getFlagsLeft() == 0 && allMinesFlagged;
+    }
+
+    private boolean checkWinningGame3(){
+        Block[][] field = getField();
+        for (Block[] row : field){
+            for (Block block : row){
+                if (!block.isMine() && !block.isReveal()) return false;
+            }
+        }
         return true;
     }
 
@@ -70,13 +104,9 @@ public class MinesweeperModel extends Field{
             block.unflag();
             flagsLeft++;
         }else if (!block.isFlag()){
-            if (flagsLeft <= 0){
-                System.out.println("All flags are used.");
-            }else{
-                block.flag();
-                if (flagsLeft > 0 && !block.isReveal()) // not already revealed
-                    flagsLeft--;
-            }
+            block.flag();
+            if (flagsLeft > 0 && !block.isReveal()) // not already revealed
+                flagsLeft--;
         }
         notifyObservers(null);
     }
@@ -91,12 +121,18 @@ public class MinesweeperModel extends Field{
                 Block adjacentBlock = getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
                 if (!revealedSquares.contains(adjacentBlock) && adjacentBlock.isBlankBlock()){ // is already revealed, then skip - add this function
                     adjacentBlock.reveal();
-                    revealAdjacentBlock(s); //to show numbers
+                    //revealAdjacentBlock(s); //to show numbers
                     revealedSquares.add(adjacentBlock);
                     revealSurroundingBlanks(adjacentBlock, revealedSquares);
                 }
             }
         }
+
+        for (Block revealedBlock : revealedSquares){
+            if (!revealedBlock.equals(s)) // skip the clicked block
+                revealAdjacentBlock(revealedBlock);
+        }
+
     }
 
     // util method for reveal surrounding blocks
@@ -106,40 +142,11 @@ public class MinesweeperModel extends Field{
         for (int[] pair : indexes) {
             if (isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
                 Block adjacentSquare = getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
-                if (!adjacentSquare.isMine()) {
+                if (!adjacentSquare.isMine()){
                     adjacentSquare.reveal();
                 }
             }
         }
-
-    }
-
-    public void autoPlay(){
-        Block[][] field = getField();
-        for (Block[] row : field){
-            for (Block block : row){
-                if (block.isMine()) {
-                    block.flag();
-                } else {
-                    block.reveal();
-                }
-            }
-        }
-        flagsLeft = 0;
-
-        notifyObservers(null);
-    }
-
-    public void resetGame(){
-        Block[][] field = getField(); // make this a instance var
-        for (Block[] row : field){
-            for (Block block : row){
-                block.forceUnreveal();
-            }
-        }
-        flagsLeft = getNumMines();
-
-        notifyObservers(null);
 
     }
 
