@@ -106,9 +106,8 @@ public class Field {
     public void revealField(){
         for (Block[] r : field){
             for (Block s : r){
-                System.out.print(s.forceReveal());
+                s.forceReveal();
             }
-            System.out.print("\n");
         }
     }
 
