@@ -4,7 +4,6 @@ import build.Block;
 import build.NumBlock;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -61,19 +60,19 @@ public class CommandLine{
         return result.toString();
     }
 
-    public static interface Command extends Runnable {
+    public interface Command extends Runnable {
 
         @Override
-        public abstract void run();
+        void run();
 
-        public String toString();
+        String toString();
 
     }
 
     /**
      * This is to differentiate commands that have params and don't have params in {@code executeCommand()}
      */
-    public static interface GameCommand extends Command{
+    public interface GameCommand extends Command{
 
     }
 
@@ -86,7 +85,7 @@ public class CommandLine{
         public void run() {
             Block s = game.getBlock(Integer.parseInt(coords[0]), Integer.parseInt(coords[1]));
             if (s.isMine() && !s.isFlag()) { // not working
-                game.gameOverLoser(); // won't break out of loop... might need an external variable
+                game.setGameOver(); // won't break out of loop... might need an external variable
             } else {
                 s.reveal();
                 ArrayList<Block> revealedBlocks = new ArrayList<Block>();
@@ -96,8 +95,6 @@ public class CommandLine{
         }
 
         private void revealSurroundingBlanks(Block s, ArrayList<Block> revealedSquares){
-            //int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
-
             for (int[] pair : ADJACENT_INDEXES) {
 
                 if (game.isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
@@ -114,7 +111,6 @@ public class CommandLine{
 
         // util method for reveal surrounding blocks
         private void revealAdjacentBlock(Block s){
-            //int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
             for (int[] pair : ADJACENT_INDEXES) {
                 if (game.isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
@@ -215,7 +211,7 @@ public class CommandLine{
         public void run() {
             game.revealField();
             System.out.println("\033[36mDon't give up next time!\033[0m");
-            game.gameOverLoser();
+            game.setGameOver();
         }
 
         public String toString(){
@@ -251,20 +247,19 @@ public class CommandLine{
             }else {
                 if (!block.isBlankBlock() && block.isReveal() && hasValidFlags((NumBlock) block)) {
                     // call the reveal methods...
-                    System.out.println("yeep");
+                    System.out.println(this);
                     ArrayList<Block> revealedBlocks = new ArrayList<Block>();
                     revealedBlocks.add(block); // see if i can directly initialize
                     revealSurroundingBlanks(block, revealedBlocks);
                     // good but does not reveal flags there should be a parameter.
                 }else{
-                    System.out.println("nope");
+                    System.out.println("Cannot cord this block: " + coordToString(coords));
                 }
             }
 
         }
 
         private void revealSurroundingBlanks(Block s, ArrayList<Block> revealedSquares){
-            //int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
             for (int[] pair : ADJACENT_INDEXES) {
 
@@ -282,7 +277,6 @@ public class CommandLine{
 
         // util method for reveal surrounding blocks
         private void revealAdjacentBlock(Block s){
-            //int[][] indexes = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 0}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 
             for (int[] pair : ADJACENT_INDEXES) {
                 if (game.isValidCoord(s.getRow()+pair[0], s.getCol()+pair[1])){
@@ -290,7 +284,7 @@ public class CommandLine{
                     if (!adjacentSquare.isMine()) {
                         adjacentSquare.reveal();
                     }else{
-                        game.gameOverLoser();
+                        game.setGameOver();
                         break;
                     }
                 }
