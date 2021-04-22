@@ -3,6 +3,7 @@ package game;
 import build.*;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 public class MinesweeperGame extends Field{
 
@@ -14,25 +15,23 @@ public class MinesweeperGame extends Field{
     private boolean isGameOver;
     private boolean isWinner;
 
+    private static final Map< Integer, Predicate< MinesweeperGame >>
+            gameOverChecker = Map.of(
+            1, MinesweeperGame::checkWinningGame1,
+            2, MinesweeperGame::checkWinningGame2,
+            3, MinesweeperGame::checkWinningGame3
+    );
+
     public MinesweeperGame(int numMines, int numRows, int numCols){
         super(numMines, numRows, numCols);
         isGameOver = false;
         isWinner = true;
         flagsLeft = numMines;
-        instance = this;
     }
 
     public MinesweeperGame(Level level){
         super(level.getNumMines(), level.getNumRows(), level.getNumCols());
         flagsLeft = level.getNumMines();
-        instance = this;
-    }
-
-    public static synchronized MinesweeperGame getInstance(){
-        if (instance == null){
-            instance = new MinesweeperGame(Level.BEGINNER);
-        }
-        return instance;
     }
 
     public void playMinesweeper() {
@@ -43,7 +42,7 @@ public class MinesweeperGame extends Field{
             //print field
             printField();
 
-            //get command and executre
+            //get command and execute
             String c = s.nextLine();
             String[] args = c.split(" ");
             CommandLine.Command command = cmd.commandBuilder(args);
@@ -53,17 +52,10 @@ public class MinesweeperGame extends Field{
                 System.out.println("No command found");
             }
 
+
             //check if game over
             if (!isGameOver) {
-
-                GameOver.Mode mode = switch(gameOverMode){
-                    case 1 -> GameOver.Mode.GAME_OVER_ONE;
-                    case 2 -> GameOver.Mode.GAME_OVER_TWO;
-                    case 3 -> GameOver.Mode.GAME_OVER_THREE;
-                    default -> throw new IllegalStateException("Unexpected value: " + gameOverMode);
-                };
-
-                isGameOver = mode.check();
+                isGameOver = gameOverChecker.get( gameOverMode ).test( this );
             }
 
             System.out.println("Flags left: " + flagsLeft);
@@ -77,6 +69,43 @@ public class MinesweeperGame extends Field{
             System.out.println("You win!");
         else
             System.out.println("You lose!");
+    }
+
+    public boolean checkWinningGame1(){
+        Block[][] field = getField();
+        for (Block[] row : field){
+            for (Block block : row){
+                if ((block.isMine() && !block.isFlag()) || (!block.isMine() && !block.isReveal())){ // not working?
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean checkWinningGame2(){
+
+        // check if all mines are flagged
+        MineBlock[] mineCoords = getMineCoords();
+        for (MineBlock mine : mineCoords){
+            if (!mine.isFlag()) {
+                return false;
+            }
+        }
+
+        return true;
+
+    }
+
+    public boolean checkWinningGame3(){
+        Block[][] field = getField();
+        for (Block[] row : field){
+            for (Block block : row){
+                if (!block.isMine() && !block.isReveal()) return false;
+            }
+        }
+        flagsLeft = 0;
+        return true;
     }
 
     public int getFlagsLeft() {

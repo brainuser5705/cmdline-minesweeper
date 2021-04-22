@@ -89,7 +89,7 @@ public class CommandLine{
             } else {
                 s.reveal();
                 ArrayList<Block> revealedBlocks = new ArrayList<Block>();
-                revealedBlocks.add(s); // see if i can directly initialize
+                revealedBlocks.add(s);
                 revealSurroundingBlanks(s, revealedBlocks);
             }
         }
@@ -101,11 +101,14 @@ public class CommandLine{
                     Block adjacentBlock = game.getBlock(s.getRow()+pair[0], s.getCol()+pair[1]);
                     if (!revealedSquares.contains(adjacentBlock) && adjacentBlock.isBlankBlock()){ // is already revealed, then skip - add this function
                         adjacentBlock.reveal();
-                        revealAdjacentBlock(s); //to show numbers
                         revealedSquares.add(adjacentBlock);
                         revealSurroundingBlanks(adjacentBlock, revealedSquares); //recursion with "accumulator" list
                     }
                 }
+            }
+            for (Block revealedBlock : revealedSquares){
+                if (!revealedBlock.equals(s)) // skip the clicked block
+                    revealAdjacentBlock(revealedBlock);
             }
         }
 
